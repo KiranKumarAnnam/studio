@@ -15,37 +15,53 @@ const USERS_DB_PATH = path.join(process.cwd(), 'src', 'lib', 'users.json');
 
 async function getUsers(): Promise<User[]> {
   try {
+    await logActivity('[getUsers] Reading users database.');
     const data = await fs.readFile(USERS_DB_PATH, 'utf-8');
-    return JSON.parse(data) as User[];
+    const users = JSON.parse(data) as User[];
+    await logActivity(`[getUsers] Found ${users.length} users.`);
+    return users;
   } catch (error) {
-    // If the file doesn't exist, return an empty array
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      await logActivity('[getUsers] users.json not found, returning empty array.');
       return [];
     }
+    await logActivity(`[getUsers] Error reading users database: ${error}`);
     throw error;
   }
 }
 
 async function saveUsers(users: User[]): Promise<void> {
+  await logActivity('[saveUsers] Saving users database.');
   await fs.writeFile(USERS_DB_PATH, JSON.stringify(users, null, 2), 'utf-8');
+  await logActivity('[saveUsers] Users database saved successfully.');
 }
 
 
 async function createSession(email: string) {
+    await logActivity(`[createSession] Creating session for user: '${email}'.`);
     const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
     const session = sign({ email }, JWT_SECRET, { expiresIn: '24h' });
+    await logActivity(`[createSession] JWT created.`);
 
     cookies().set('session', session, { expires, httpOnly: true });
+    await logActivity(`[createSession] Session cookie set.`);
 }
 
 export async function getSession() {
+  await logActivity('[getSession] Attempting to get session.');
   const sessionCookie = cookies().get('session')?.value;
-  if (!sessionCookie) return null;
+  if (!sessionCookie) {
+    await logActivity('[getSession] No session cookie found.');
+    return null;
+  }
 
   try {
+    await logActivity('[getSession] Verifying session cookie.');
     const decoded = verify(sessionCookie, JWT_SECRET) as { email: string; iat: number; exp: number };
+    await logActivity(`[getSession] Session verified for user: '${decoded.email}'.`);
     return { user: { email: decoded.email } };
   } catch (error) {
+    await logActivity(`[getSession] Session verification failed: ${error}`);
     return null;
   }
 }
@@ -60,26 +76,33 @@ export async function logout() {
 }
 
 export async function login(credentials: any) {
+  await logActivity(`[login] Attempting login for email: '${credentials.email}'.`);
   const users = await getUsers();
   const user = users.find(u => u.email === credentials.email);
 
-  if (!user || user.password !== credentials.password) {
-    await logActivity(`Failed login attempt for email: '${credentials.email}'.`);
+  if (!user) {
+    await logActivity(`[login] Login failed: User not found for email '${credentials.email}'.`);
+    return { error: 'Invalid email or password.' };
+  }
+  
+  if (user.password !== credentials.password) {
+    await logActivity(`[login] Login failed: Invalid password for email '${credentials.email}'.`);
     return { error: 'Invalid email or password.' };
   }
   
   await createSession(user.email);
-  await logActivity(`User '${user.email}' logged in successfully.`);
+  await logActivity(`[login] Login successful for '${user.email}'. Triggering redirect.`);
   
   redirect('/');
 }
 
 export async function signup(credentials: any) {
+  await logActivity(`[signup] Attempting signup for email: '${credentials.email}'.`);
   const users = await getUsers();
   const existingUser = users.find(u => u.email === credentials.email);
 
   if (existingUser) {
-    await logActivity(`Failed signup attempt for existing email: '${credentials.email}'.`);
+    await logActivity(`[signup] Signup failed: Email already exists for '${credentials.email}'.`);
     return { error: 'An account with this email already exists.' };
   }
 
@@ -95,7 +118,7 @@ export async function signup(credentials: any) {
   await saveUsers(users);
   
   await createSession(newUser.email);
-  await logActivity(`New user signed up: '${newUser.email}'.`);
+  await logActivity(`[signup] New user signed up: '${newUser.email}'. Triggering redirect.`);
 
   redirect('/');
 }
