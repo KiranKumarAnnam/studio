@@ -1,58 +1,45 @@
-# syntax=docker/dockerfile:1
-
-# --- Base Stage ---
-# Installs dependencies. This is a separate stage to leverage Docker's layer caching.
-# Dependencies are only re-installed when package.json or package-lock.json changes.
+# ---- Base Image ----
+# The base image is used to build the application.
+# It includes all the necessary dependencies to build the app.
 FROM node:20-alpine AS base
 WORKDIR /app
 
-# Copy package.json and package-lock.json.
-COPY package.json ./
-COPY package-lock.json* ./
-
 # Install dependencies.
 # Using --frozen-lockfile is a good practice for CI/CD and Docker builds.
-RUN npm install --production --frozen-lockfile
+RUN npm install --frozen-lockfile
 
 # Copy the rest of the application source code.
 COPY . .
 
-
-# --- Builder Stage ---
-# Builds the Next.js application.
-FROM base AS builder
-
-# Re-install all dependencies, including devDependencies, for building.
-RUN npm install --frozen-lockfile
-# Build the Next.js application.
+# Build the application.
+# This will create a .next folder with the built application.
 RUN npm run build
 
-
-# --- Runner Stage ---
-# Creates the final, small production image.
+# ---- Runner Image ----
+# The runner image is used to run the application.
+# It's a smaller image that only contains the necessary files to run the app.
 FROM node:20-alpine AS runner
 WORKDIR /app
 
 # Set environment variables.
 ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED 1
 
-# Create a non-root user for security.
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+# Install production dependencies.
+# This will install only the dependencies listed in the "dependencies" section of package.json.
+COPY --from=base /app/package.json ./
+RUN npm install --production --frozen-lockfile
 
-# Copy the built application from the builder stage.
-COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/next.config.ts ./next.config.ts
+# Copy the built application from the base image.
+# This includes the Next.js server, static assets, and public files.
+# The standalone output mode creates a minimal server with only the necessary files.
+COPY --from=base /app/.next/standalone ./
+COPY --from=base /app/.next/static ./.next/static
+COPY --from=base /app/public ./public
 
-# Set the user to the non-root user.
-USER nextjs
-
-# Expose the port the app runs on.
+# The port the application will run on.
+# This should match the port in the docker run command.
 EXPOSE 3000
 
-# Start the Next.js application.
-CMD ["npm", "start"]
+# The command to start the application.
+# This will start the Next.js server in production mode.
+CMD ["node", "server.js"]
