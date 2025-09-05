@@ -35,24 +35,15 @@ export default function SignupPage() {
 
   const onSubmit = async (data: SignupFormValues) => {
     setIsLoading(true);
-    try {
-      const result = await signup(data);
-       if (result?.error) {
-        toast({
-            variant: 'destructive',
-            title: 'Signup Failed',
-            description: result.error,
-          });
-      }
-    } catch (error: any) {
-      toast({
+    const result = await signup(data);
+    if (result?.error) {
+    toast({
         variant: 'destructive',
         title: 'Signup Failed',
-        description: 'An unknown error occurred. Please try again.',
-      });
-    } finally {
-        setIsLoading(false);
+        description: result.error,
+        });
     }
+    setIsLoading(false);
   };
 
   return (

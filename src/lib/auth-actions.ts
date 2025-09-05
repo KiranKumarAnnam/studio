@@ -80,13 +80,8 @@ export async function login(credentials: any) {
   const users = await getUsers();
   const user = users.find(u => u.email === credentials.email);
 
-  if (!user) {
-    await logActivity(`[login] Login failed: User not found for email '${credentials.email}'.`);
-    return { error: 'Invalid email or password.' };
-  }
-  
-  if (user.password !== credentials.password) {
-    await logActivity(`[login] Login failed: Invalid password for email '${credentials.email}'.`);
+  if (!user || user.password !== credentials.password) {
+    await logActivity(`[login] Login failed: Invalid credentials for email '${credentials.email}'.`);
     return { error: 'Invalid email or password.' };
   }
   

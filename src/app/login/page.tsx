@@ -35,24 +35,15 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
-    try {
-      const result = await login(data);
-      if (result?.error) {
-         toast({
-            variant: 'destructive',
-            title: 'Login Failed',
-            description: result.error,
-          });
-      }
-    } catch (error: any) {
-       toast({
+    const result = await login(data);
+    if (result?.error) {
+        toast({
         variant: 'destructive',
         title: 'Login Failed',
-        description: 'An unknown error occurred. Please try again.',
-      });
-    } finally {
-        setIsLoading(false);
+        description: result.error,
+        });
     }
+    setIsLoading(false);
   };
 
   return (
