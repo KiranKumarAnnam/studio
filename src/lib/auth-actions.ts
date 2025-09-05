@@ -85,13 +85,11 @@ export async function logout() {
     redirect('/login');
 }
 
-export async function login(credentials: any): Promise<{ error?: string } | void> {
+export async function login(credentials: any): Promise<{ error?: string }> {
     await logActivity(`[login] SERVER ACTION: Starting login for email: '${credentials.email}'.`);
-    
-    let user;
     try {
         const users = await getUsers();
-        user = users.find(u => u.email === credentials.email);
+        const user = users.find(u => u.email === credentials.email);
 
         if (!user) {
           await logActivity(`[login] FAILURE: User not found for email '${credentials.email}'.`);
@@ -106,18 +104,17 @@ export async function login(credentials: any): Promise<{ error?: string } | void
         await logActivity(`[login] Password is correct for '${credentials.email}'.`);
         
         await createSession(user.email);
-        await logActivity(`[login] Session created. Preparing to redirect.`);
+        await logActivity(`[login] Session created.`);
 
     } catch (error) {
         await logActivity(`[login] CRITICAL FAILURE: An exception occurred during login process: ${error}`);
         return { error: 'A server error occurred during login.' };
     }
   
-  await logActivity(`[login] Calling redirect('/').`);
   redirect('/');
 }
 
-export async function signup(credentials: any): Promise<{ error?: string } | void> {
+export async function signup(credentials: any): Promise<{ error?: string }> {
     await logActivity(`[signup] SERVER ACTION: Starting signup for email: '${credentials.email}'.`);
     try {
         const users = await getUsers();
@@ -140,12 +137,11 @@ export async function signup(credentials: any): Promise<{ error?: string } | voi
         await logActivity(`[signup] New user saved for '${credentials.email}'.`);
         
         await createSession(newUser.email);
-        await logActivity(`[signup] Session created for new user. Preparing to redirect.`);
+        await logActivity(`[signup] Session created for new user.`);
     } catch (error) {
         await logActivity(`[signup] CRITICAL FAILURE: An exception occurred during signup: ${error}`);
         return { error: 'A server error occurred during signup.' };
     }
 
-  await logActivity(`[signup] Calling redirect('/').`);
   redirect('/');
 }

@@ -41,19 +41,28 @@ export default function SignupPage() {
     setError(null);
     await logActivity(`[SignupPage] CLIENT: Form submitted with email: ${data.email}. Calling signup server action.`);
     
-    const result = await signup(data);
-
-    if (result?.error) {
-        await logActivity(`[SignupPage] CLIENT: Server action returned error: ${result.error}`);
-        setError(result.error);
+    try {
+        const result = await signup(data);
+        if (result?.error) {
+            await logActivity(`[SignupPage] CLIENT: Server action returned error: ${result.error}`);
+            setError(result.error);
+            toast({
+                variant: 'destructive',
+                title: 'Signup Failed',
+                description: result.error,
+            });
+        }
+    } catch(e: any) {
+        await logActivity(`[SignupPage] CLIENT: Caught an unexpected error: ${e.message}`);
+        setError('An unknown error occurred.');
         toast({
             variant: 'destructive',
             title: 'Signup Failed',
-            description: result.error,
+            description: 'An unknown error occurred. Please try again.',
         });
+    } finally {
+        setIsLoading(false);
     }
-    
-    setIsLoading(false);
   };
 
   return (

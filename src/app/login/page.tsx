@@ -41,21 +41,28 @@ export default function LoginPage() {
     setError(null);
     await logActivity(`[LoginPage] CLIENT: Form submitted with email: ${data.email}. Calling login server action.`);
     
-    // Server action will redirect on success or return an error object.
-    const result = await login(data);
-
-    if (result?.error) {
-        await logActivity(`[LoginPage] CLIENT: Server action returned error: ${result.error}`);
-        setError(result.error);
-         toast({
+    try {
+        const result = await login(data);
+        if (result?.error) {
+            await logActivity(`[LoginPage] CLIENT: Server action returned error: ${result.error}`);
+            setError(result.error);
+            toast({
+                variant: 'destructive',
+                title: 'Login Failed',
+                description: result.error,
+            });
+        }
+    } catch (e: any) {
+        await logActivity(`[LoginPage] CLIENT: Caught an unexpected error: ${e.message}`);
+        setError('An unknown error occurred.');
+        toast({
             variant: 'destructive',
             title: 'Login Failed',
-            description: result.error,
+            description: 'An unknown error occurred. Please try again.',
         });
+    } finally {
+        setIsLoading(false);
     }
-    
-    // If we are here, it means there was an error. Stop loading.
-    setIsLoading(false);
   };
 
   return (
