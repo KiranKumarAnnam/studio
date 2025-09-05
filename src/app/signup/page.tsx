@@ -97,7 +97,7 @@ export default function SignupPage() {
                             <Input id="password" type="password" {...field} disabled={isLoading} />
                             </FormControl>
                             <FormMessage />
-                        </FormItem>
+                        </Item>
                         )}
                     />
                     <Button type="submit" className="w-full" disabled={isLoading}>
