@@ -48,8 +48,8 @@ export default function Home() {
   };
   
   const getCurrencyFormatter = (currencyCode: keyof typeof currencies) => {
-    const { rate, code } = currencies[currencyCode];
-    return (amount: number) => formatCurrency(amount * rate, code);
+    const { rate, code, symbol } = currencies[currencyCode];
+    return (amount: number) => formatCurrency(amount * rate, code, symbol);
   };
 
   const currencyFormatter = getCurrencyFormatter(currency);
