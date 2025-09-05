@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Expense, Budget } from '@/lib/types';
 import { AppHeader } from '@/components/app-header';
 import { ExpenseSummary } from '@/components/expense-summary';
@@ -12,6 +12,10 @@ import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/helpers';
 import type { SummaryPeriod } from '@/lib/types';
 import { isThisMonth, isThisYear } from 'date-fns';
+import { auth } from '@/lib/firebase';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
 
 const initialExpenses: Expense[] = [
   { id: '1', description: 'Groceries from Walmart', amount: 75.2, date: new Date(), category: 'Groceries' },
@@ -42,7 +46,23 @@ export default function Home() {
   const [currency, setCurrency] = useState<keyof typeof currencies>('INR');
   const [additionalSummaries, setAdditionalSummaries] = useState<SummaryPeriod[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>(initialBudgets);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const router = useRouter();
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUser(user);
+      } else {
+        router.push('/login');
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [router]);
 
   const handleSaveExpense = (expense: Omit<Expense, 'id'>) => {
     // When saving, we convert the amount back to the base currency (USD)
@@ -107,12 +127,25 @@ export default function Home() {
   const monthlyExpenses = expenses.filter(e => isThisMonth(e.date));
   const yearlyExpenses = expenses.filter(e => isThisYear(e.date));
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-16 w-16 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null; // The redirect is handled in the useEffect
+  }
+  
   return (
     <div className="flex min-h-screen w-full flex-col bg-background font-body">
       <AppHeader 
         currencies={Object.keys(currencies)}
         selectedCurrency={currency}
         onCurrencyChange={(c) => setCurrency(c as keyof typeof currencies)}
+        user={user}
       />
       <main className="flex flex-1 flex-col gap-4 p-4 container mx-auto md:gap-8 md:p-8">
         <ExpenseSummary 
