@@ -11,7 +11,7 @@ import { BudgetGoals } from '@/components/budget-goals';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/helpers';
 import type { SummaryPeriod } from '@/lib/types';
-import { isThisMonth } from 'date-fns';
+import { isThisMonth, isThisYear } from 'date-fns';
 
 const initialExpenses: Expense[] = [
   { id: '1', description: 'Groceries from Walmart', amount: 75.2, date: new Date(), category: 'Groceries' },
@@ -24,9 +24,10 @@ const initialExpenses: Expense[] = [
 const defaultCategories = ['Groceries', 'Bills', 'Rent', 'Dining', 'EMI', 'Transport', 'Health', 'Entertainment', 'Other'];
 
 const initialBudgets: Budget[] = [
-  { category: 'Groceries', limit: 400 },
-  { category: 'Dining', limit: 200 },
-  { category: 'Entertainment', limit: 150 },
+  { category: 'Groceries', limit: 400, period: 'monthly' },
+  { category: 'Dining', limit: 200, period: 'monthly' },
+  { category: 'Entertainment', limit: 150, period: 'monthly' },
+  { category: 'Health', limit: 1000, period: 'yearly' },
 ];
 
 const currencies = {
@@ -72,22 +73,27 @@ export default function Home() {
     setAdditionalSummaries(prev => prev.filter(p => p.id !== id));
   };
   
-  const handleSaveBudget = (budget: Budget) => {
+  const handleSaveBudget = (budget: Omit<Budget, 'id'>) => {
     // When saving, we convert the amount back to the base currency (USD)
     const limitInUSD = budget.limit / currencies[currency].rate;
+    const budgetToSave = { ...budget, limit: limitInUSD };
+    
     setBudgets(prev => {
-      const existing = prev.find(b => b.category === budget.category);
-      if (existing) {
-        return prev.map(b => b.category === budget.category ? { ...b, limit: limitInUSD } : b);
+      const existingIndex = prev.findIndex(b => b.category === budget.category && b.period === budget.period);
+      if (existingIndex > -1) {
+        const updatedBudgets = [...prev];
+        updatedBudgets[existingIndex] = budgetToSave;
+        return updatedBudgets;
       }
-      return [...prev, { ...budget, limit: limitInUSD }];
+      return [...prev, budgetToSave];
     });
-    toast({ title: 'Budget Saved', description: `Your budget for ${budget.category} has been set.` });
+
+    toast({ title: 'Budget Saved', description: `Your ${budget.period} budget for ${budget.category} has been set.` });
   };
 
-  const handleDeleteBudget = (category: string) => {
-    setBudgets(prev => prev.filter(b => b.category !== category));
-    toast({ title: 'Budget Removed', description: `The budget for ${category} has been removed.` });
+  const handleDeleteBudget = (category: string, period: 'monthly' | 'yearly') => {
+    setBudgets(prev => prev.filter(b => !(b.category === category && b.period === period)));
+    toast({ title: 'Budget Removed', description: `The ${period} budget for ${category} has been removed.` });
   };
 
   const getCurrencyFormatter = (currencyCode: keyof typeof currencies) => {
@@ -99,6 +105,7 @@ export default function Home() {
   const selectedCurrencyInfo = currencies[currency];
   
   const monthlyExpenses = expenses.filter(e => isThisMonth(e.date));
+  const yearlyExpenses = expenses.filter(e => isThisYear(e.date));
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background font-body">
@@ -134,7 +141,8 @@ export default function Home() {
             />
             <BudgetGoals 
               budgets={budgets}
-              expenses={monthlyExpenses}
+              monthlyExpenses={monthlyExpenses}
+              yearlyExpenses={yearlyExpenses}
               categories={categories}
               onSaveBudget={handleSaveBudget}
               onDeleteBudget={handleDeleteBudget}

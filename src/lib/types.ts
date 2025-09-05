@@ -18,4 +18,5 @@ export interface SummaryPeriod {
 export interface Budget {
   category: string;
   limit: number;
+  period: 'monthly' | 'yearly';
 }
