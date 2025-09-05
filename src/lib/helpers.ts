@@ -5,13 +5,8 @@ export function formatCurrency(amount: number, currency = 'USD', symbol?: string
   const options: Intl.NumberFormatOptions = {
     style: 'currency',
     currency: currency,
+    currencyDisplay: 'symbol'
   };
-
-  if (symbol) {
-    options.currencyDisplay = 'symbol';
-  } else {
-    options.currencyDisplay = 'code';
-  }
 
   const formatter = new Intl.NumberFormat('en-US', options);
   let formatted = formatter.format(amount);
@@ -21,26 +16,20 @@ export function formatCurrency(amount: number, currency = 'USD', symbol?: string
       'INR': '₹',
       'EUR': '€',
   };
-  
+
   const targetSymbol = symbol || currencySymbols[currency as keyof typeof currencySymbols] || currency;
+  
+  const defaultSymbol = new Intl.NumberFormat('en-US', { style: 'currency', currency, currencyDisplay: 'symbol' }).format(0).replace(/[0-9.,\s]/g, '');
 
-  if (symbol) {
-      const codeSymbol = new Intl.NumberFormat('en-US', { style: 'currency', currency, currencyDisplay: 'code' }).format(0).replace(/[0-9.,\s]/g, '');
-      const nameSymbol = new Intl.NumberFormat('en-US', { style: 'currency', currency, currencyDisplay: 'name' }).format(0).replace(/[0-9.,\s]/g, '');
-      const narrowSymbol = new Intl.NumberFormat('en-US', { style: 'currency', currency, currencyDisplay: 'narrowSymbol' }).format(0).replace(/[0-9.,\s]/g, '');
-      const defaultSymbol = new Intl.NumberFormat('en-US', { style: 'currency', currency, currencyDisplay: 'symbol' }).format(0).replace(/[0-9.,\s]/g, '');
-      
-      const symbolsToReplace = [codeSymbol, nameSymbol, narrowSymbol, defaultSymbol, currency];
-      const uniqueSymbols = [...new Set(symbolsToReplace)];
-
-      for (const s of uniqueSymbols) {
-        if (formatted.includes(s)) {
-          formatted = formatted.replace(s, targetSymbol);
-          break;
-        }
-      }
+  // For some currencies, the symbol is not the default. We need to replace it.
+  if (targetSymbol !== defaultSymbol) {
+    formatted = formatted.replace(defaultSymbol, targetSymbol);
   }
 
+  // A specific fix for INR which sometimes formats as "INR" instead of "₹"
+  if (currency === 'INR') {
+    return formatted.replace(/INR/g, '₹');
+  }
 
   return formatted;
 }
