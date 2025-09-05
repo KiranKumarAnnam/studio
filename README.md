@@ -42,7 +42,25 @@ sudo apt-get update
 sudo apt-get install docker-ce docker-ce-cli containerd.io
 ```
 
-### Build the Docker Image
+### Using the Install Script (Recommended)
+
+An `install.sh` script is included to automate the build and run process. It handles stopping and removing old containers before starting a new one.
+
+1.  Make the script executable:
+    ```bash
+    chmod +x install.sh
+    ```
+2.  Run the script:
+    ```bash
+    ./install.sh
+    ```
+The script will build the image and start the container. You can access the app at [http://localhost:3000](http://localhost:3000).
+
+### Manual Docker Build and Run
+
+If you prefer to run the commands manually:
+
+**1. Build the Docker Image**
 
 Navigate to the project's root directory (where the `Dockerfile` is located) and run the following command to build the Docker image. We'll tag it as `spendwise`.
 
@@ -50,12 +68,16 @@ Navigate to the project's root directory (where the `Dockerfile` is located) and
 docker build -t spendwise .
 ```
 
-### Run the Docker Container
+**2. Run the Docker Container**
 
-Once the image is built, you can run it as a container with this command:
+Once the image is built, you can run it as a container with this command. This will also name the container `spendwise-app` for easier management.
 
 ```bash
-docker run -p 3000:3000 spendwise
+# To stop and remove an old container if it exists
+docker stop spendwise-app && docker rm spendwise-app
+
+# To run the new container
+docker run -d -p 3000:3000 --name spendwise-app spendwise
 ```
 
 This command starts the container and maps port 3000 on your host machine to port 3000 inside the container.
