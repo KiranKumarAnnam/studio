@@ -15,6 +15,7 @@ import { isThisMonth, isThisYear } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { getSession } from '@/lib/auth-actions';
+import { logActivity } from '@/lib/logger';
 
 const initialExpenses: Expense[] = [
   { id: '1', description: 'Groceries from Walmart', amount: 75.2, date: new Date(), category: 'Groceries' },
@@ -63,20 +64,32 @@ export default function Home() {
     checkSession();
   }, [router]);
 
+  const userEmail = session?.user?.email;
+
   const handleSaveExpense = (expense: Omit<Expense, 'id'>) => {
     // When saving, we convert the amount back to the base currency (USD)
     const amountInUSD = expense.amount / currencies[currency].rate;
     setExpenses(prev => [...prev, { ...expense, amount: amountInUSD, id: Date.now().toString() }].sort((a,b) => b.date.getTime() - a.date.getTime()));
+    if(userEmail) {
+      logActivity(`User '${userEmail}' added expense: "${expense.description}" for ${formatCurrency(expense.amount, currency)}.`);
+    }
   };
   
   const handleDeleteExpense = (id: string) => {
+    const expenseToDelete = expenses.find(e => e.id === id);
     setExpenses(prev => prev.filter(e => e.id !== id));
     toast({ title: 'Expense Deleted', description: 'The expense has been removed.' });
+    if(userEmail && expenseToDelete) {
+      logActivity(`User '${userEmail}' deleted expense: "${expenseToDelete.description}".`);
+    }
   };
   
   const handleAddCategory = (category: string) => {
     if (category && !categories.includes(category)) {
       setCategories(prev => [...prev, category].sort());
+      if(userEmail) {
+        logActivity(`User '${userEmail}' added category: "${category}".`);
+      }
       return true;
     }
     return false;
@@ -108,11 +121,17 @@ export default function Home() {
     });
 
     toast({ title: 'Budget Saved', description: `Your ${budget.period} budget for ${budget.category} has been set.` });
+    if(userEmail) {
+        logActivity(`User '${userEmail}' saved a ${budget.period} budget for "${budget.category}" of ${formatCurrency(budget.limit, currency)}.`);
+    }
   };
 
   const handleDeleteBudget = (category: string, period: 'monthly' | 'yearly') => {
     setBudgets(prev => prev.filter(b => !(b.category === category && b.period === period)));
     toast({ title: 'Budget Removed', description: `The ${period} budget for ${category} has been removed.` });
+     if(userEmail) {
+        logActivity(`User '${userEmail}' deleted the ${period} budget for "${category}".`);
+    }
   };
 
   const getCurrencyFormatter = (currencyCode: keyof typeof currencies) => {
