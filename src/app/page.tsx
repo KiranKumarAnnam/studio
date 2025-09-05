@@ -39,7 +39,7 @@ const currencies = {
 export default function Home() {
   const [expenses, setExpenses] = useState<Expense[]>(initialExpenses);
   const [categories, setCategories] = useState<string[]>(defaultCategories);
-  const [currency, setCurrency] = useState<keyof typeof currencies>('USD');
+  const [currency, setCurrency] = useState<keyof typeof currencies>('INR');
   const [additionalSummaries, setAdditionalSummaries] = useState<SummaryPeriod[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>(initialBudgets);
   const { toast } = useToast();
