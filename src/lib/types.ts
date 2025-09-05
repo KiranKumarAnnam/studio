@@ -6,6 +6,7 @@ export interface Expense {
   amount: number;
   date: Date;
   category: string;
+  isRecurring?: boolean;
 }
 
 export interface SummaryPeriod {

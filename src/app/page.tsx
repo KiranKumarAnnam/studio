@@ -5,15 +5,16 @@ import type { Expense } from '@/lib/types';
 import { AppHeader } from '@/components/app-header';
 import { ExpenseSummary } from '@/components/expense-summary';
 import { ExpenseTable } from '@/components/expense-table';
+import { UpcomingPayments } from '@/components/upcoming-payments';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/helpers';
 import type { SummaryPeriod } from '@/lib/types';
 
 const initialExpenses: Expense[] = [
   { id: '1', description: 'Groceries from Walmart', amount: 75.2, date: new Date(), category: 'Groceries' },
-  { id: '2', description: 'Monthly electricity bill', amount: 120.0, date: new Date(new Date().setDate(new Date().getDate() - 2)), category: 'Bills' },
+  { id: '2', description: 'Monthly electricity bill', amount: 120.0, date: new Date(new Date().setDate(new Date().getDate() - 2)), category: 'Bills', isRecurring: true },
   { id: '3', description: 'Dinner with friends', amount: 55.5, date: new Date(new Date().setDate(new Date().getDate() - 5)), category: 'Dining' },
-  { id: '4', description: 'January Rent', amount: 1500, date: new Date(new Date().setMonth(new Date().getMonth() - 1)), category: 'Rent'},
+  { id: '4', description: 'January Rent', amount: 1500, date: new Date(new Date().setMonth(new Date().getMonth() - 1)), category: 'Rent', isRecurring: true},
   { id: '5', description: 'Yearly car insurance', amount: 800, date: new Date(new Date().setFullYear(new Date().getFullYear() - 1)), category: 'EMI'},
 ].sort((a,b) => b.date.getTime() - a.date.getTime());
 
@@ -84,15 +85,23 @@ export default function Home() {
           onAddSummary={handleAddSummary}
           onRemoveSummary={handleRemoveSummary}
         />
-        <ExpenseTable
-          expenses={expenses}
-          categories={categories}
-          onSaveExpense={handleSaveExpense}
-          onDeleteExpense={handleDeleteExpense}
-          onAddCategory={handleAddCategory}
-          currencyFormatter={currencyFormatter}
-          currencySymbol={selectedCurrencyInfo.symbol}
-        />
+        <div className="grid gap-8 md:grid-cols-3">
+          <div className="md:col-span-2">
+            <ExpenseTable
+              expenses={expenses}
+              categories={categories}
+              onSaveExpense={handleSaveExpense}
+              onDeleteExpense={handleDeleteExpense}
+              onAddCategory={handleAddCategory}
+              currencyFormatter={currencyFormatter}
+              currencySymbol={selectedCurrencyInfo.symbol}
+            />
+          </div>
+          <UpcomingPayments 
+            expenses={expenses.filter(e => e.isRecurring)}
+            currencyFormatter={currencyFormatter}
+          />
+        </div>
       </main>
     </div>
   );

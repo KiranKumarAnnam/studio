@@ -13,6 +13,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { getCategorySuggestions } from '@/app/actions';
 import { cn } from '@/lib/utils';
@@ -23,6 +25,7 @@ const expenseSchema = z.object({
   amount: z.coerce.number().positive('Amount must be positive.'),
   date: z.date({ required_error: 'Date is required.' }),
   category: z.string().min(1, 'Category is required.'),
+  isRecurring: z.boolean().default(false),
 });
 
 type ExpenseFormValues = z.infer<typeof expenseSchema>;
@@ -45,6 +48,7 @@ export function AddExpenseSheet({ isOpen, setIsOpen, categories, onSave, onAddCa
       amount: undefined,
       date: new Date(),
       category: '',
+      isRecurring: false,
     },
   });
 
@@ -60,6 +64,7 @@ export function AddExpenseSheet({ isOpen, setIsOpen, categories, onSave, onAddCa
         amount: undefined,
         date: new Date(),
         category: '',
+        isRecurring: false,
       });
       setSuggestions([]);
     }
@@ -224,6 +229,25 @@ export function AddExpenseSheet({ isOpen, setIsOpen, categories, onSave, onAddCa
                   </Button>
               </div>
             </div>
+
+            <FormField
+              control={form.control}
+              name="isRecurring"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                  <div className="space-y-0.5">
+                    <FormLabel>Recurring Expense</FormLabel>
+                    <p className="text-sm text-muted-foreground">Is this a monthly or yearly bill?</p>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
 
             <SheetFooter className="pt-4">
                <Button variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
