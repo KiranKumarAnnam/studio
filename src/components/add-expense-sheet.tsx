@@ -33,9 +33,10 @@ interface AddExpenseSheetProps {
   categories: string[];
   onSave: (expense: Omit<Expense, 'id'>) => void;
   onAddCategory: (category: string) => boolean;
+  currencySymbol: string;
 }
 
-export function AddExpenseSheet({ isOpen, setIsOpen, categories, onSave, onAddCategory }: AddExpenseSheetProps) {
+export function AddExpenseSheet({ isOpen, setIsOpen, categories, onSave, onAddCategory, currencySymbol }: AddExpenseSheetProps) {
   const { toast } = useToast();
   const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(expenseSchema),
@@ -128,7 +129,7 @@ export function AddExpenseSheet({ isOpen, setIsOpen, categories, onSave, onAddCa
                   name="amount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Amount ($)</FormLabel>
+                      <FormLabel>Amount ({currencySymbol})</FormLabel>
                       <FormControl>
                         <Input type="number" placeholder="0.00" step="0.01" {...field} />
                       </FormControl>

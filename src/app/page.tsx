@@ -31,7 +31,9 @@ export default function Home() {
   const { toast } = useToast();
 
   const handleSaveExpense = (expense: Omit<Expense, 'id'>) => {
-    setExpenses(prev => [...prev, { ...expense, id: Date.now().toString() }].sort((a,b) => b.date.getTime() - a.date.getTime()));
+    // When saving, we convert the amount back to the base currency (USD)
+    const amountInUSD = expense.amount / currencies[currency].rate;
+    setExpenses(prev => [...prev, { ...expense, amount: amountInUSD, id: Date.now().toString() }].sort((a,b) => b.date.getTime() - a.date.getTime()));
   };
   
   const handleDeleteExpense = (id: string) => {
@@ -48,11 +50,12 @@ export default function Home() {
   };
   
   const getCurrencyFormatter = (currencyCode: keyof typeof currencies) => {
-    const { rate, code, symbol } = currencies[currencyCode];
-    return (amount: number) => formatCurrency(amount * rate, code, symbol);
+    const { rate, code } = currencies[currencyCode];
+    return (amount: number) => formatCurrency(amount * rate, code);
   };
 
   const currencyFormatter = getCurrencyFormatter(currency);
+  const selectedCurrencyInfo = currencies[currency];
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background font-body">
@@ -70,6 +73,7 @@ export default function Home() {
           onDeleteExpense={handleDeleteExpense}
           onAddCategory={handleAddCategory}
           currencyFormatter={currencyFormatter}
+          currencySymbol={selectedCurrencyInfo.symbol}
         />
       </main>
     </div>

@@ -20,9 +20,10 @@ interface ExpenseTableProps {
   onDeleteExpense: (id: string) => void;
   onAddCategory: (category: string) => boolean;
   currencyFormatter: (amount: number) => string;
+  currencySymbol: string;
 }
 
-export function ExpenseTable({ expenses, categories, onSaveExpense, onDeleteExpense, onAddCategory, currencyFormatter }: ExpenseTableProps) {
+export function ExpenseTable({ expenses, categories, onSaveExpense, onDeleteExpense, onAddCategory, currencyFormatter, currencySymbol }: ExpenseTableProps) {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [expenseToDelete, setExpenseToDelete] = useState<Expense | null>(null);
 
@@ -127,6 +128,7 @@ export function ExpenseTable({ expenses, categories, onSaveExpense, onDeleteExpe
         categories={categories}
         onSave={onSaveExpense}
         onAddCategory={onAddCategory}
+        currencySymbol={currencySymbol}
       />
     </>
   );
