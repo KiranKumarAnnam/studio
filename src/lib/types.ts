@@ -20,3 +20,9 @@ export interface Budget {
   limit: number;
   period: 'monthly' | 'yearly';
 }
+
+export interface User {
+  id: string;
+  email: string;
+  password?: string; // Should be hashed in a real app
+}

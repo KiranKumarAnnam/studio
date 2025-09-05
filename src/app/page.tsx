@@ -12,10 +12,9 @@ import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/helpers';
 import type { SummaryPeriod } from '@/lib/types';
 import { isThisMonth, isThisYear } from 'date-fns';
-import { auth } from '@/lib/firebase';
-import { onAuthStateChanged, User } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
+import { getSession } from '@/lib/auth-actions';
 
 const initialExpenses: Expense[] = [
   { id: '1', description: 'Groceries from Walmart', amount: 75.2, date: new Date(), category: 'Groceries' },
@@ -46,22 +45,22 @@ export default function Home() {
   const [currency, setCurrency] = useState<keyof typeof currencies>('INR');
   const [additionalSummaries, setAdditionalSummaries] = useState<SummaryPeriod[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>(initialBudgets);
-  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<{user: { email: string }} | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUser(user);
-      } else {
+    const checkSession = async () => {
+      const sessionData = await getSession();
+      if (!sessionData) {
         router.push('/login');
+      } else {
+        setSession(sessionData);
+        setLoading(false);
       }
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
+    };
+    checkSession();
   }, [router]);
 
   const handleSaveExpense = (expense: Omit<Expense, 'id'>) => {
@@ -135,7 +134,7 @@ export default function Home() {
     );
   }
 
-  if (!user) {
+  if (!session) {
     return null; // The redirect is handled in the useEffect
   }
   
@@ -145,7 +144,7 @@ export default function Home() {
         currencies={Object.keys(currencies)}
         selectedCurrency={currency}
         onCurrencyChange={(c) => setCurrency(c as keyof typeof currencies)}
-        user={user}
+        user={session.user}
       />
       <main className="flex flex-1 flex-col gap-4 p-4 container mx-auto md:gap-8 md:p-8">
         <ExpenseSummary 

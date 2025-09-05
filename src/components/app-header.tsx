@@ -1,27 +1,27 @@
-
-import { LogOut, Wallet, User as UserIcon } from 'lucide-react';
+import { LogOut, Wallet } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { auth } from '@/lib/firebase';
-import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
-import type { User } from 'firebase/auth';
+import { logout } from '@/lib/auth-actions';
 
 interface AppHeaderProps {
   currencies: string[];
   selectedCurrency: string;
   onCurrencyChange: (currency: string) => void;
-  user: User | null;
+  user: {
+    email: string;
+  } | null;
 }
 
 export function AppHeader({ currencies, selectedCurrency, onCurrencyChange, user }: AppHeaderProps) {
   const router = useRouter();
 
   const handleLogout = async () => {
-    await signOut(auth);
+    await logout();
     router.push('/login');
+    router.refresh();
   };
 
   const getInitials = (email?: string | null) => {
@@ -56,7 +56,8 @@ export function AppHeader({ currencies, selectedCurrency, onCurrencyChange, user
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                   <Avatar className="h-10 w-10">
-                    <AvatarImage src={user.photoURL || ''} alt={user.displayName || user.email || 'User'} />
+                    {/* Placeholder for user avatar image */}
+                    <AvatarImage src="" alt={user.email || 'User'} />
                     <AvatarFallback>
                       {getInitials(user.email)}
                     </AvatarFallback>

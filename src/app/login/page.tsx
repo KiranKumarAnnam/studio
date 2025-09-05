@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -8,8 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { login } from '@/lib/auth-actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -40,12 +38,17 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, data.email, data.password);
-      toast({
-        title: 'Login Successful',
-        description: "Welcome back! You're now signed in.",
-      });
-      router.push('/');
+      const result = await login(data);
+      if (result.success) {
+        toast({
+          title: 'Login Successful',
+          description: "Welcome back! You're now signed in.",
+        });
+        router.push('/');
+        router.refresh(); // To trigger the session check on the main page
+      } else {
+        throw new Error(result.error);
+      }
     } catch (error: any) {
       toast({
         variant: 'destructive',
