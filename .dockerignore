@@ -1,0 +1,21 @@
+# Git
+.git
+.gitignore
+
+# Docker
+.dockerignore
+Dockerfile
+
+# Dependencies
+node_modules
+
+# Build artifacts
+.next
+dist
+build
+
+# Local environment
+.env.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
