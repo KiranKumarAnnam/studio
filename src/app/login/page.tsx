@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -23,7 +22,6 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
-  const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -44,8 +42,7 @@ export default function LoginPage() {
           title: 'Login Successful',
           description: "Welcome back! You're now signed in.",
         });
-        router.push('/');
-        router.refresh();
+        window.location.href = '/';
       } else {
         throw new Error(result.error);
       }
