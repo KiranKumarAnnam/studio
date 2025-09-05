@@ -1,5 +1,8 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import { BellRing, CalendarDays } from 'lucide-react';
-import { addMonths, format, formatDistanceToNow, getDay } from 'date-fns';
+import { addMonths, format, formatDistanceToNow } from 'date-fns';
 import type { Expense } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,22 +13,36 @@ interface UpcomingPaymentsProps {
 }
 
 export function UpcomingPayments({ expenses, currencyFormatter }: UpcomingPaymentsProps) {
-  
-  const getNextDueDate = (expenseDate: Date): Date => {
-    const today = new Date();
-    let nextDueDate = new Date(expenseDate);
-    
-    // Find the next due date that is on or after today
-    while (nextDueDate < today) {
-      nextDueDate = addMonths(nextDueDate, 1);
-    }
-    return nextDueDate;
-  }
+  const [upcoming, setUpcoming] = useState< (Expense & { nextDueDate: Date; distance: string })[] >([]);
+  const [isClient, setIsClient] = useState(false);
 
-  const upcoming = expenses
-    .map(e => ({ ...e, nextDueDate: getNextDueDate(e.date) }))
-    .sort((a, b) => a.nextDueDate.getTime() - b.nextDueDate.getTime())
-    .slice(0, 5);
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (isClient) {
+      const getNextDueDate = (expenseDate: Date): Date => {
+        const today = new Date();
+        let nextDueDate = new Date(expenseDate);
+        while (nextDueDate < today) {
+          nextDueDate = addMonths(nextDueDate, 1);
+        }
+        return nextDueDate;
+      };
+
+      const upcomingPayments = expenses
+        .map(e => ({ 
+          ...e, 
+          nextDueDate: getNextDueDate(e.date),
+          distance: formatDistanceToNow(getNextDueDate(e.date), { addSuffix: true })
+        }))
+        .sort((a, b) => a.nextDueDate.getTime() - b.nextDueDate.getTime())
+        .slice(0, 5);
+
+      setUpcoming(upcomingPayments);
+    }
+  }, [expenses, isClient]);
 
   return (
     <Card>
@@ -48,9 +65,11 @@ export function UpcomingPayments({ expenses, currencyFormatter }: UpcomingPaymen
                 <p className="font-medium truncate">{expense.description}</p>
                 <p className="text-sm text-muted-foreground">{currencyFormatter(expense.amount)}</p>
               </div>
-              <Badge variant="outline" className="hidden sm:inline-flex">
-                {formatDistanceToNow(expense.nextDueDate, { addSuffix: true })}
-              </Badge>
+              {isClient && (
+                <Badge variant="outline" className="hidden sm:inline-flex">
+                  {expense.distance}
+                </Badge>
+              )}
             </div>
           ))
         ) : (
