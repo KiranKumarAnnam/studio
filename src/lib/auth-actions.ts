@@ -1,3 +1,4 @@
+
 'use server';
 
 import { sign, verify } from 'jsonwebtoken';
@@ -116,7 +117,6 @@ export async function login(credentials: any): Promise<{ error?: string }> {
 
 export async function signup(credentials: any): Promise<{ error?: string }> {
     await logActivity(`[signup] SERVER ACTION: Starting signup for email: '${credentials.email}'.`);
-    let newUser: User;
     try {
         const users = await getUsers();
         const existingUser = users.find(u => u.email === credentials.email);
@@ -126,7 +126,7 @@ export async function signup(credentials: any): Promise<{ error?: string }> {
             return { error: 'An account with this email already exists.' };
         }
 
-        newUser = {
+        const newUser: User = {
           id: (users.length + 1).toString(),
           email: credentials.email,
           password: credentials.password,

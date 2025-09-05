@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -39,30 +40,21 @@ export default function SignupPage() {
     setIsLoading(true);
     setError(null);
     await logActivity(`[SignupPage] CLIENT: Form submitted with email: ${data.email}. Calling signup server action.`);
-    try {
-        const result = await signup(data);
-        if (result?.error) {
-            await logActivity(`[SignupPage] CLIENT: Server action returned error: ${result.error}`);
-            setError(result.error);
-            toast({
-                variant: 'destructive',
-                title: 'Signup Failed',
-                description: result.error,
-            });
-        } else {
-            await logActivity('[SignupPage] CLIENT: Server action returned success, but this should have been a redirect. This indicates a potential problem.');
-        }
-    } catch (e: any) {
-        await logActivity(`[SignupPage] CLIENT: An unhandled error occurred during form submission: ${e.message}`);
-         toast({
+    
+    const result = await signup(data);
+
+    if (result?.error) {
+        await logActivity(`[SignupPage] CLIENT: Server action returned error: ${result.error}`);
+        setError(result.error);
+        toast({
             variant: 'destructive',
             title: 'Signup Failed',
-            description: 'An unexpected error occurred. Please check the logs.',
+            description: result.error,
         });
-    } finally {
-        await logActivity('[SignupPage] CLIENT: Form submission process finished.');
-        setIsLoading(false);
     }
+    
+    await logActivity('[SignupPage] CLIENT: Form submission process finished.');
+    setIsLoading(false);
   };
 
   return (

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -39,30 +40,25 @@ export default function LoginPage() {
     setIsLoading(true);
     setError(null);
     await logActivity(`[LoginPage] CLIENT: Form submitted with email: ${data.email}. Calling login server action.`);
-    try {
-        const result = await login(data);
-        if (result?.error) {
-            await logActivity(`[LoginPage] CLIENT: Server action returned error: ${result.error}`);
-            setError(result.error);
-             toast({
-                variant: 'destructive',
-                title: 'Login Failed',
-                description: result.error,
-            });
-        } else {
-             await logActivity('[LoginPage] CLIENT: Server action returned success, but this should have been a redirect. This indicates a potential problem.');
-        }
-    } catch (e: any) {
-        await logActivity(`[LoginPage] CLIENT: An unhandled error occurred during form submission: ${e.message}`);
-        toast({
+    
+    // The server action will handle redirection on success.
+    // It will only return if there's an error.
+    const result = await login(data);
+
+    if (result?.error) {
+        await logActivity(`[LoginPage] CLIENT: Server action returned error: ${result.error}`);
+        setError(result.error);
+         toast({
             variant: 'destructive',
             title: 'Login Failed',
-            description: 'An unexpected error occurred. Please check the logs.',
+            description: result.error,
         });
-    } finally {
-        await logActivity('[LoginPage] CLIENT: Form submission process finished.');
-        setIsLoading(false);
     }
+    
+    // If the server action redirects, this part of the code won't be reached.
+    // If it returns without an error but also without redirecting (which shouldn't happen), we stop loading.
+    await logActivity('[LoginPage] CLIENT: Form submission process finished.');
+    setIsLoading(false);
   };
 
   return (
