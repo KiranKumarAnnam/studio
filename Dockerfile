@@ -1,49 +1,47 @@
-# Dockerfile for a Next.js application
+# Dockerfile
 
 # 1. Base Stage: Install dependencies and build the application
 FROM node:20-alpine AS base
+
+# Set working directory
 WORKDIR /app
 
-# Copy package and lock files
+# Copy package.json and package-lock.json to leverage Docker cache
 COPY package.json ./
 COPY package-lock.json* ./
 
-# Install dependencies.
-# Using --frozen-lockfile is a good practice for CI/CD and Docker builds.
+# Install all dependencies, including devDependencies needed for the build
 RUN npm install --frozen-lockfile
 
-# Copy the rest of the application source code.
+# Copy the rest of the application source code
 COPY . .
 
-# Build the application.
+# Build the Next.js application
 RUN npm run build
 
-# 2. Runner Stage: Create a small, secure production image
+# 2. Runner Stage: Create the final, optimized production image
 FROM node:20-alpine AS runner
+
 WORKDIR /app
 
-# Set environment variables
-ENV NODE_ENV=production
-# Uncomment the following line in case you want to disable telemetry during runtime.
-# ENV NEXT_TELEMETRY_DISABLED=${NEXT_TELEMETRY_DISABLED}
-
-# Create a non-root user for security
+# Create non-root user and group for better security
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copy the standalone output from the base stage.
-COPY --from=base /app/public ./public
+# Copy only the necessary files from the base stage
+COPY --from=base /app/package.json ./package.json
 
 # Automatically leverage output traces to reduce image size
 # https://nextjs.org/docs/advanced-features/output-file-tracing
 COPY --from=base --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=base --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Change ownership of the app directory
+# Set the user to the non-root user
 USER nextjs
 
-# Expose the port the app runs on
 EXPOSE 3000
 
-# Set the command to run the application
+ENV PORT 3000
+# ENV NEXT_TELEMETRY_DISABLED=1
+
 CMD ["node", "server.js"]
