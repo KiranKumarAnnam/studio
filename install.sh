@@ -16,6 +16,14 @@ if [ $(docker ps -a -q -f name=^/${CONTAINER_NAME}$) ]; then
     echo "-----> Old container removed."
 fi
 
+# Check if the host port is already in use by another container
+if [ "$(docker ps -q -f "publish=${HOST_PORT}")" ]; then
+    echo "!!!!!! Port ${HOST_PORT} is already in use by another container."
+    echo "!!!!!! Please stop the other container or choose a different port."
+    exit 1
+fi
+
+
 # Build the Docker image from the Dockerfile in the current directory
 echo "-----> Building Docker image: ${IMAGE_NAME}"
 docker build -t ${IMAGE_NAME} .
@@ -34,4 +42,3 @@ docker run -d -p ${HOST_PORT}:${CONTAINER_PORT} --name ${CONTAINER_NAME} ${IMAGE
 
 echo "-----> Container is running."
 echo "-----> You can access the application at http://localhost:${HOST_PORT}"
-
