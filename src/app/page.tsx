@@ -6,6 +6,7 @@ import { AppHeader } from '@/components/app-header';
 import { ExpenseSummary } from '@/components/expense-summary';
 import { ExpenseTable } from '@/components/expense-table';
 import { UpcomingPayments } from '@/components/upcoming-payments';
+import { ExpenseChart } from '@/components/expense-chart';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/helpers';
 import type { SummaryPeriod } from '@/lib/types';
@@ -85,8 +86,8 @@ export default function Home() {
           onAddSummary={handleAddSummary}
           onRemoveSummary={handleRemoveSummary}
         />
-        <div className="grid gap-8 md:grid-cols-3">
-          <div className="md:col-span-2">
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-5">
+          <div className="lg:col-span-3">
             <ExpenseTable
               expenses={expenses}
               categories={categories}
@@ -97,10 +98,16 @@ export default function Home() {
               currencySymbol={selectedCurrencyInfo.symbol}
             />
           </div>
-          <UpcomingPayments 
-            expenses={expenses.filter(e => e.isRecurring)}
-            currencyFormatter={currencyFormatter}
-          />
+          <div className="lg:col-span-2 grid gap-8 content-start">
+            <UpcomingPayments 
+              expenses={expenses.filter(e => e.isRecurring)}
+              currencyFormatter={currencyFormatter}
+            />
+            <ExpenseChart 
+              expenses={expenses}
+              currencyFormatter={currencyFormatter}
+            />
+          </div>
         </div>
       </main>
     </div>
