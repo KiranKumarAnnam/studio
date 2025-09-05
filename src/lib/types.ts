@@ -14,3 +14,8 @@ export interface SummaryPeriod {
     label: string;
     icon?: LucideIcon;
 }
+
+export interface Budget {
+  category: string;
+  limit: number;
+}

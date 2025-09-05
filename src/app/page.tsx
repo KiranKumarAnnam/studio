@@ -1,15 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import type { Expense } from '@/lib/types';
+import type { Expense, Budget } from '@/lib/types';
 import { AppHeader } from '@/components/app-header';
 import { ExpenseSummary } from '@/components/expense-summary';
 import { ExpenseTable } from '@/components/expense-table';
 import { UpcomingPayments } from '@/components/upcoming-payments';
 import { ExpenseChart } from '@/components/expense-chart';
+import { BudgetGoals } from '@/components/budget-goals';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/helpers';
 import type { SummaryPeriod } from '@/lib/types';
+import { isThisMonth } from 'date-fns';
 
 const initialExpenses: Expense[] = [
   { id: '1', description: 'Groceries from Walmart', amount: 75.2, date: new Date(), category: 'Groceries' },
@@ -20,6 +22,12 @@ const initialExpenses: Expense[] = [
 ].sort((a,b) => b.date.getTime() - a.date.getTime());
 
 const defaultCategories = ['Groceries', 'Bills', 'Rent', 'Dining', 'EMI', 'Transport', 'Health', 'Entertainment', 'Other'];
+
+const initialBudgets: Budget[] = [
+  { category: 'Groceries', limit: 400 },
+  { category: 'Dining', limit: 200 },
+  { category: 'Entertainment', limit: 150 },
+];
 
 const currencies = {
   USD: { rate: 1, symbol: '$', code: 'USD' },
@@ -32,6 +40,7 @@ export default function Home() {
   const [categories, setCategories] = useState<string[]>(defaultCategories);
   const [currency, setCurrency] = useState<keyof typeof currencies>('USD');
   const [additionalSummaries, setAdditionalSummaries] = useState<SummaryPeriod[]>([]);
+  const [budgets, setBudgets] = useState<Budget[]>(initialBudgets);
   const { toast } = useToast();
 
   const handleSaveExpense = (expense: Omit<Expense, 'id'>) => {
@@ -63,6 +72,24 @@ export default function Home() {
     setAdditionalSummaries(prev => prev.filter(p => p.id !== id));
   };
   
+  const handleSaveBudget = (budget: Budget) => {
+    // When saving, we convert the amount back to the base currency (USD)
+    const limitInUSD = budget.limit / currencies[currency].rate;
+    setBudgets(prev => {
+      const existing = prev.find(b => b.category === budget.category);
+      if (existing) {
+        return prev.map(b => b.category === budget.category ? { ...b, limit: limitInUSD } : b);
+      }
+      return [...prev, { ...budget, limit: limitInUSD }];
+    });
+    toast({ title: 'Budget Saved', description: `Your budget for ${budget.category} has been set.` });
+  };
+
+  const handleDeleteBudget = (category: string) => {
+    setBudgets(prev => prev.filter(b => b.category !== category));
+    toast({ title: 'Budget Removed', description: `The budget for ${category} has been removed.` });
+  };
+
   const getCurrencyFormatter = (currencyCode: keyof typeof currencies) => {
     const { rate, code } = currencies[currencyCode];
     return (amount: number) => formatCurrency(amount * rate, code);
@@ -70,6 +97,8 @@ export default function Home() {
 
   const currencyFormatter = getCurrencyFormatter(currency);
   const selectedCurrencyInfo = currencies[currency];
+  
+  const monthlyExpenses = expenses.filter(e => isThisMonth(e.date));
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background font-body">
@@ -102,6 +131,16 @@ export default function Home() {
             <UpcomingPayments 
               expenses={expenses.filter(e => e.isRecurring)}
               currencyFormatter={currencyFormatter}
+            />
+            <BudgetGoals 
+              budgets={budgets}
+              expenses={monthlyExpenses}
+              categories={categories}
+              onSaveBudget={handleSaveBudget}
+              onDeleteBudget={handleDeleteBudget}
+              currencyFormatter={currencyFormatter}
+              currencySymbol={selectedCurrencyInfo.symbol}
+              currencyRate={selectedCurrencyInfo.rate}
             />
             <ExpenseChart 
               expenses={expenses}
