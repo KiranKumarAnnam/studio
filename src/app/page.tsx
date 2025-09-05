@@ -13,9 +13,6 @@ import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/helpers';
 import type { SummaryPeriod } from '@/lib/types';
 import { isThisMonth, isThisYear } from 'date-fns';
-import { useRouter } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
-import { getSession } from '@/lib/auth-actions';
 import { logActivity } from '@/lib/logger';
 
 const initialExpenses: Expense[] = [
@@ -47,53 +44,28 @@ export default function Home() {
   const [currency, setCurrency] = useState<keyof typeof currencies>('INR');
   const [additionalSummaries, setAdditionalSummaries] = useState<SummaryPeriod[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>(initialBudgets);
-  const [session, setSession] = useState<{user: { email: string }} | null>(null);
-  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  const router = useRouter();
-
-  useEffect(() => {
-    const checkSession = async () => {
-      await logActivity('[Home Page] Mount: Running checkSession...');
-      const sessionData = await getSession();
-      if (!sessionData) {
-        await logActivity('[Home Page] Mount: No session found. Redirecting to /login.');
-        router.push('/login');
-      } else {
-        await logActivity(`[Home Page] Mount: Session found for user: ${sessionData.user.email}. Setting session and loading to false.`);
-        setSession(sessionData);
-        setLoading(false);
-      }
-    };
-    checkSession();
-  }, [router]);
-
-  const userEmail = session?.user?.email;
 
   const handleSaveExpense = (expense: Omit<Expense, 'id'>) => {
     // When saving, we convert the amount back to the base currency (USD)
     const amountInUSD = expense.amount / currencies[currency].rate;
     setExpenses(prev => [...prev, { ...expense, amount: amountInUSD, id: Date.now().toString() }].sort((a,b) => b.date.getTime() - a.date.getTime()));
-    if(userEmail) {
-      logActivity(`User '${userEmail}' added expense: "${expense.description}" for ${formatCurrency(expense.amount, currency)}.`);
-    }
+    logActivity(`Added expense: "${expense.description}" for ${formatCurrency(expense.amount, currency)}.`);
   };
   
   const handleDeleteExpense = (id: string) => {
     const expenseToDelete = expenses.find(e => e.id === id);
     setExpenses(prev => prev.filter(e => e.id !== id));
     toast({ title: 'Expense Deleted', description: 'The expense has been removed.' });
-    if(userEmail && expenseToDelete) {
-      logActivity(`User '${userEmail}' deleted expense: "${expenseToDelete.description}".`);
+    if (expenseToDelete) {
+      logActivity(`Deleted expense: "${expenseToDelete.description}".`);
     }
   };
   
   const handleAddCategory = (category: string) => {
     if (category && !categories.includes(category)) {
       setCategories(prev => [...prev, category].sort());
-      if(userEmail) {
-        logActivity(`User '${userEmail}' added category: "${category}".`);
-      }
+      logActivity(`Added category: "${category}".`);
       return true;
     }
     return false;
@@ -125,17 +97,13 @@ export default function Home() {
     });
 
     toast({ title: 'Budget Saved', description: `Your ${budget.period} budget for ${budget.category} has been set.` });
-    if(userEmail) {
-        logActivity(`User '${userEmail}' saved a ${budget.period} budget for "${budget.category}" of ${formatCurrency(budget.limit, currency)}.`);
-    }
+    logActivity(`Saved a ${budget.period} budget for "${budget.category}" of ${formatCurrency(budget.limit, currency)}.`);
   };
 
   const handleDeleteBudget = (category: string, period: 'monthly' | 'yearly') => {
     setBudgets(prev => prev.filter(b => !(b.category === category && b.period === period)));
     toast({ title: 'Budget Removed', description: `The ${period} budget for ${category} has been removed.` });
-     if(userEmail) {
-        logActivity(`User '${userEmail}' deleted the ${period} budget for "${category}".`);
-    }
+    logActivity(`Deleted the ${period} budget for "${category}".`);
   };
 
   const getCurrencyFormatter = (currencyCode: keyof typeof currencies) => {
@@ -149,25 +117,12 @@ export default function Home() {
   const monthlyExpenses = expenses.filter(e => isThisMonth(e.date));
   const yearlyExpenses = expenses.filter(e => isThisYear(e.date));
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-16 w-16 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (!session) {
-    return null; // The redirect is handled in the useEffect
-  }
-  
   return (
     <div className="flex min-h-screen w-full flex-col bg-background font-body">
       <AppHeader 
         currencies={Object.keys(currencies)}
         selectedCurrency={currency}
         onCurrencyChange={(c) => setCurrency(c as keyof typeof currencies)}
-        user={session.user}
       />
       <main className="flex flex-1 flex-col gap-4 p-4 container mx-auto md:gap-8 md:p-8">
         <ExpenseSummary 
