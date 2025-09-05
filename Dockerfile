@@ -1,8 +1,12 @@
-# ---- Base Image ----
-# The base image is used to build the application.
-# It includes all the necessary dependencies to build the app.
+# Dockerfile for a Next.js application
+
+# 1. Base Stage: Install dependencies and build the application
 FROM node:20-alpine AS base
 WORKDIR /app
+
+# Copy package and lock files
+COPY package.json ./
+COPY package-lock.json* ./
 
 # Install dependencies.
 # Using --frozen-lockfile is a good practice for CI/CD and Docker builds.
@@ -12,34 +16,34 @@ RUN npm install --frozen-lockfile
 COPY . .
 
 # Build the application.
-# This will create a .next folder with the built application.
 RUN npm run build
 
-# ---- Runner Image ----
-# The runner image is used to run the application.
-# It's a smaller image that only contains the necessary files to run the app.
+# 2. Runner Stage: Create a small, secure production image
 FROM node:20-alpine AS runner
 WORKDIR /app
 
-# Set environment variables.
+# Set environment variables
 ENV NODE_ENV=production
+# Uncomment the following line in case you want to disable telemetry during runtime.
+# ENV NEXT_TELEMETRY_DISABLED=${NEXT_TELEMETRY_DISABLED}
 
-# Install production dependencies.
-# This will install only the dependencies listed in the "dependencies" section of package.json.
-COPY --from=base /app/package.json ./
-RUN npm install --production --frozen-lockfile
+# Create a non-root user for security
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
 
-# Copy the built application from the base image.
-# This includes the Next.js server, static assets, and public files.
-# The standalone output mode creates a minimal server with only the necessary files.
-COPY --from=base /app/.next/standalone ./
-COPY --from=base /app/.next/static ./.next/static
+# Copy the standalone output from the base stage.
 COPY --from=base /app/public ./public
 
-# The port the application will run on.
-# This should match the port in the docker run command.
+# Automatically leverage output traces to reduce image size
+# https://nextjs.org/docs/advanced-features/output-file-tracing
+COPY --from=base --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=base --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# Change ownership of the app directory
+USER nextjs
+
+# Expose the port the app runs on
 EXPOSE 3000
 
-# The command to start the application.
-# This will start the Next.js server in production mode.
+# Set the command to run the application
 CMD ["node", "server.js"]
