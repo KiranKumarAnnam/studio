@@ -57,7 +57,6 @@ export default function LoginPage() {
     
     // If the server action redirects, this part of the code won't be reached.
     // If it returns without an error but also without redirecting (which shouldn't happen), we stop loading.
-    await logActivity('[LoginPage] CLIENT: Form submission process finished.');
     setIsLoading(false);
   };
 

@@ -53,7 +53,6 @@ export default function SignupPage() {
         });
     }
     
-    await logActivity('[SignupPage] CLIENT: Form submission process finished.');
     setIsLoading(false);
   };
 

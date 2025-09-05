@@ -85,7 +85,7 @@ export async function logout() {
     redirect('/login');
 }
 
-export async function login(credentials: any): Promise<{ error?: string }> {
+export async function login(credentials: any): Promise<{ error?: string } | void> {
     await logActivity(`[login] SERVER ACTION: Starting login for email: '${credentials.email}'.`);
     try {
         const users = await getUsers();
@@ -115,7 +115,7 @@ export async function login(credentials: any): Promise<{ error?: string }> {
   redirect('/');
 }
 
-export async function signup(credentials: any): Promise<{ error?: string }> {
+export async function signup(credentials: any): Promise<{ error?: string } | void> {
     await logActivity(`[signup] SERVER ACTION: Starting signup for email: '${credentials.email}'.`);
     try {
         const users = await getUsers();
