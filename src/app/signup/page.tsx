@@ -37,22 +37,21 @@ export default function SignupPage() {
     setIsLoading(true);
     try {
       const result = await signup(data);
-       if (result.success) {
+       if (result?.error) {
         toast({
-          title: 'Account Created!',
-          description: "Your account has been created successfully. You're now logged in.",
-        });
-        window.location.href = '/';
-      } else {
-        throw new Error(result.error)
+            variant: 'destructive',
+            title: 'Signup Failed',
+            description: result.error,
+          });
       }
     } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'Signup Failed',
-        description: error.message || 'An unknown error occurred. Please try again.',
+        description: 'An unknown error occurred. Please try again.',
       });
-      setIsLoading(false);
+    } finally {
+        setIsLoading(false);
     }
   };
 

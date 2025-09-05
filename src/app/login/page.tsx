@@ -37,22 +37,21 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       const result = await login(data);
-      if (result.success) {
-        toast({
-          title: 'Login Successful',
-          description: "Welcome back! You're now signed in.",
-        });
-        window.location.href = '/';
-      } else {
-        throw new Error(result.error);
+      if (result?.error) {
+         toast({
+            variant: 'destructive',
+            title: 'Login Failed',
+            description: result.error,
+          });
       }
     } catch (error: any) {
-      toast({
+       toast({
         variant: 'destructive',
         title: 'Login Failed',
-        description: error.message || 'An unknown error occurred. Please try again.',
+        description: 'An unknown error occurred. Please try again.',
       });
-      setIsLoading(false);
+    } finally {
+        setIsLoading(false);
     }
   };
 

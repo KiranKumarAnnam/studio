@@ -3,8 +3,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { useRouter } from 'next/navigation';
 import { logout } from '@/lib/auth-actions';
+import { useTransition } from 'react';
+
 
 interface AppHeaderProps {
   currencies: string[];
@@ -16,12 +17,12 @@ interface AppHeaderProps {
 }
 
 export function AppHeader({ currencies, selectedCurrency, onCurrencyChange, user }: AppHeaderProps) {
-  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
 
   const handleLogout = async () => {
-    await logout();
-    router.push('/login');
-    router.refresh();
+    startTransition(async () => {
+      await logout();
+    });
   };
 
   const getInitials = (email?: string | null) => {
@@ -74,7 +75,7 @@ export function AppHeader({ currencies, selectedCurrency, onCurrencyChange, user
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer" disabled={isPending}>
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Log out</span>
                 </DropdownMenuItem>

@@ -6,6 +6,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import type { User } from './types';
 import { logActivity } from './logger';
+import { redirect } from 'next/navigation';
 
 
 // In a real app, you'd use a more secure secret and manage it properly.
@@ -55,6 +56,7 @@ export async function logout() {
         await logActivity(`User '${session.user.email}' logged out.`);
     }
     cookies().set('session', '', { expires: new Date(0) });
+    redirect('/login');
 }
 
 export async function login(credentials: any) {
@@ -63,12 +65,13 @@ export async function login(credentials: any) {
 
   if (!user || user.password !== credentials.password) {
     await logActivity(`Failed login attempt for email: '${credentials.email}'.`);
-    return { success: false, error: 'Invalid email or password.' };
+    return { error: 'Invalid email or password.' };
   }
   
   await createSession(user.email);
   await logActivity(`User '${user.email}' logged in successfully.`);
-  return { success: true };
+  
+  redirect('/');
 }
 
 export async function signup(credentials: any) {
@@ -77,7 +80,7 @@ export async function signup(credentials: any) {
 
   if (existingUser) {
     await logActivity(`Failed signup attempt for existing email: '${credentials.email}'.`);
-    return { success: false, error: 'An account with this email already exists.' };
+    return { error: 'An account with this email already exists.' };
   }
 
   const newUser: User = {
@@ -93,5 +96,6 @@ export async function signup(credentials: any) {
   
   await createSession(newUser.email);
   await logActivity(`New user signed up: '${newUser.email}'.`);
-  return { success: true };
+
+  redirect('/');
 }
