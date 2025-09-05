@@ -53,13 +53,13 @@ export default function Home() {
 
   useEffect(() => {
     const checkSession = async () => {
-      await logActivity('[Home Page] Running checkSession...');
+      await logActivity('[Home Page] Mount: Running checkSession...');
       const sessionData = await getSession();
       if (!sessionData) {
-        await logActivity('[Home Page] No session found. Redirecting to /login.');
+        await logActivity('[Home Page] Mount: No session found. Redirecting to /login.');
         router.push('/login');
       } else {
-        await logActivity(`[Home Page] Session found for user: ${sessionData.user.email}. Setting session and loading to false.`);
+        await logActivity(`[Home Page] Mount: Session found for user: ${sessionData.user.email}. Setting session and loading to false.`);
         setSession(sessionData);
         setLoading(false);
       }

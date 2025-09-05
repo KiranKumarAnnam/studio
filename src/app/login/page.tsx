@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Wallet } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+import { logActivity } from '@/lib/logger';
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address.' }),
@@ -37,23 +38,29 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
     setError(null);
+    await logActivity(`[LoginPage] CLIENT: Form submitted with email: ${data.email}. Calling login server action.`);
     try {
         const result = await login(data);
         if (result?.error) {
+            await logActivity(`[LoginPage] CLIENT: Server action returned error: ${result.error}`);
             setError(result.error);
              toast({
                 variant: 'destructive',
                 title: 'Login Failed',
                 description: result.error,
             });
+        } else {
+             await logActivity('[LoginPage] CLIENT: Server action returned success, but this should have been a redirect. This indicates a potential problem.');
         }
-    } catch (e) {
+    } catch (e: any) {
+        await logActivity(`[LoginPage] CLIENT: An unhandled error occurred during form submission: ${e.message}`);
         toast({
             variant: 'destructive',
             title: 'Login Failed',
-            description: 'An unexpected server error occurred.',
+            description: 'An unexpected error occurred. Please check the logs.',
         });
     } finally {
+        await logActivity('[LoginPage] CLIENT: Form submission process finished.');
         setIsLoading(false);
     }
   };
