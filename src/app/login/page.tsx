@@ -17,7 +17,7 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from '@/component
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address.' }),
-  password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
+  password: z.string().min(1, { message: 'Password is required.' }),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -45,7 +45,7 @@ export default function LoginPage() {
           description: "Welcome back! You're now signed in.",
         });
         router.push('/');
-        router.refresh(); // To trigger the session check on the main page
+        router.refresh();
       } else {
         throw new Error(result.error);
       }
