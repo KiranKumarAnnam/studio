@@ -6,6 +6,7 @@ import { AppHeader } from '@/components/app-header';
 import { ExpenseSummary } from '@/components/expense-summary';
 import { ExpenseTable } from '@/components/expense-table';
 import { useToast } from '@/hooks/use-toast';
+import { formatCurrency } from '@/lib/helpers';
 
 const initialExpenses: Expense[] = [
   { id: '1', description: 'Groceries from Walmart', amount: 75.2, date: new Date(), category: 'Groceries' },
@@ -17,9 +18,16 @@ const initialExpenses: Expense[] = [
 
 const defaultCategories = ['Groceries', 'Bills', 'Rent', 'Dining', 'EMI', 'Transport', 'Health', 'Entertainment', 'Other'];
 
+const currencies = {
+  USD: { rate: 1, symbol: '$', code: 'USD' },
+  INR: { rate: 83.5, symbol: '₹', code: 'INR' },
+  EUR: { rate: 0.92, symbol: '€', code: 'EUR' },
+};
+
 export default function Home() {
   const [expenses, setExpenses] = useState<Expense[]>(initialExpenses);
   const [categories, setCategories] = useState<string[]>(defaultCategories);
+  const [currency, setCurrency] = useState<keyof typeof currencies>('USD');
   const { toast } = useToast();
 
   const handleSaveExpense = (expense: Omit<Expense, 'id'>) => {
@@ -38,18 +46,30 @@ export default function Home() {
     }
     return false;
   };
+  
+  const getCurrencyFormatter = (currencyCode: keyof typeof currencies) => {
+    const { rate, code } = currencies[currencyCode];
+    return (amount: number) => formatCurrency(amount * rate, code);
+  };
+
+  const currencyFormatter = getCurrencyFormatter(currency);
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background font-body">
-      <AppHeader />
+      <AppHeader 
+        currencies={Object.keys(currencies)}
+        selectedCurrency={currency}
+        onCurrencyChange={(c) => setCurrency(c as keyof typeof currencies)}
+      />
       <main className="flex flex-1 flex-col gap-4 p-4 container mx-auto md:gap-8 md:p-8">
-        <ExpenseSummary expenses={expenses} />
+        <ExpenseSummary expenses={expenses} currencyFormatter={currencyFormatter} />
         <ExpenseTable
           expenses={expenses}
           categories={categories}
           onSaveExpense={handleSaveExpense}
           onDeleteExpense={handleDeleteExpense}
           onAddCategory={handleAddCategory}
+          currencyFormatter={currencyFormatter}
         />
       </main>
     </div>

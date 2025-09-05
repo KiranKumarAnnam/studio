@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import type { Expense } from '@/lib/types';
-import { formatCurrency, exportToCsv } from '@/lib/helpers';
+import { exportToCsv } from '@/lib/helpers';
 import { format } from 'date-fns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -19,9 +19,10 @@ interface ExpenseTableProps {
   onSaveExpense: (expense: Omit<Expense, 'id'>) => void;
   onDeleteExpense: (id: string) => void;
   onAddCategory: (category: string) => boolean;
+  currencyFormatter: (amount: number) => string;
 }
 
-export function ExpenseTable({ expenses, categories, onSaveExpense, onDeleteExpense, onAddCategory }: ExpenseTableProps) {
+export function ExpenseTable({ expenses, categories, onSaveExpense, onDeleteExpense, onAddCategory, currencyFormatter }: ExpenseTableProps) {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [expenseToDelete, setExpenseToDelete] = useState<Expense | null>(null);
 
@@ -66,7 +67,7 @@ export function ExpenseTable({ expenses, categories, onSaveExpense, onDeleteExpe
                       <Badge variant="outline">{expense.category}</Badge>
                     </TableCell>
                     <TableCell className="hidden md:table-cell">{format(expense.date, 'MMM d, yyyy')}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(expense.amount)}</TableCell>
+                    <TableCell className="text-right">{currencyFormatter(expense.amount)}</TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>

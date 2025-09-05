@@ -1,7 +1,6 @@
 'use client';
 import type { Expense } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { formatCurrency } from '@/lib/helpers';
 import {
   isToday,
   isThisWeek,
@@ -12,9 +11,10 @@ import { DollarSign, Calendar, TrendingUp, BarChartBig } from 'lucide-react';
 
 interface ExpenseSummaryProps {
   expenses: Expense[];
+  currencyFormatter: (amount: number) => string;
 }
 
-export function ExpenseSummary({ expenses }: ExpenseSummaryProps) {
+export function ExpenseSummary({ expenses, currencyFormatter }: ExpenseSummaryProps) {
   
   const dailyTotal = expenses
     .filter(e => isToday(e.date))
@@ -48,7 +48,7 @@ export function ExpenseSummary({ expenses }: ExpenseSummaryProps) {
             <item.icon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(item.total)}</div>
+            <div className="text-2xl font-bold">{currencyFormatter(item.total)}</div>
           </CardContent>
         </Card>
       ))}

@@ -1,9 +1,9 @@
 import type { Expense } from './types';
 
-export function formatCurrency(amount: number) {
+export function formatCurrency(amount: number, currency = 'USD') {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'USD',
+    currency: currency,
   }).format(amount);
 }
 
