@@ -62,7 +62,7 @@ export default function LoginPage() {
         <Image
           src="https://picsum.photos/1200/800"
           alt="An abstract image representing financial management"
-          data-ai-hint="finance abstract"
+          data-ai-hint="financial planning"
           fill
           className="object-cover"
         />
