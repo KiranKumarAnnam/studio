@@ -7,7 +7,6 @@ import { ExpenseSummary } from '@/components/expense-summary';
 import { ExpenseTable } from '@/components/expense-table';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency } from '@/lib/helpers';
-import type { DateRange } from 'react-day-picker';
 
 const initialExpenses: Expense[] = [
   { id: '1', description: 'Groceries from Walmart', amount: 75.2, date: new Date(), category: 'Groceries' },
@@ -29,7 +28,6 @@ export default function Home() {
   const [expenses, setExpenses] = useState<Expense[]>(initialExpenses);
   const [categories, setCategories] = useState<string[]>(defaultCategories);
   const [currency, setCurrency] = useState<keyof typeof currencies>('USD');
-  const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const { toast } = useToast();
 
   const handleSaveExpense = (expense: Omit<Expense, 'id'>) => {
@@ -70,8 +68,6 @@ export default function Home() {
         <ExpenseSummary 
           expenses={expenses} 
           currencyFormatter={currencyFormatter}
-          dateRange={dateRange}
-          setDateRange={setDateRange}
         />
         <ExpenseTable
           expenses={expenses}
