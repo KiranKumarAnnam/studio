@@ -87,9 +87,11 @@ export async function logout() {
 
 export async function login(credentials: any): Promise<{ error?: string } | void> {
     await logActivity(`[login] SERVER ACTION: Starting login for email: '${credentials.email}'.`);
+    
+    let user;
     try {
         const users = await getUsers();
-        const user = users.find(u => u.email === credentials.email);
+        user = users.find(u => u.email === credentials.email);
 
         if (!user) {
           await logActivity(`[login] FAILURE: User not found for email '${credentials.email}'.`);

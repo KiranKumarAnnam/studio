@@ -41,8 +41,7 @@ export default function LoginPage() {
     setError(null);
     await logActivity(`[LoginPage] CLIENT: Form submitted with email: ${data.email}. Calling login server action.`);
     
-    // The server action will handle redirection on success.
-    // It will only return if there's an error.
+    // Server action will redirect on success or return an error object.
     const result = await login(data);
 
     if (result?.error) {
@@ -55,8 +54,7 @@ export default function LoginPage() {
         });
     }
     
-    // If the server action redirects, this part of the code won't be reached.
-    // If it returns without an error but also without redirecting (which shouldn't happen), we stop loading.
+    // If we are here, it means there was an error. Stop loading.
     setIsLoading(false);
   };
 
