@@ -24,6 +24,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 export default function LoginPage() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -35,25 +36,18 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
+    setError(null);
     try {
         const result = await login(data);
         if (result?.error) {
-            toast({
+            setError(result.error);
+             toast({
                 variant: 'destructive',
                 title: 'Login Failed',
                 description: result.error,
             });
-        } else if (result?.success) {
-             // Successful login, force a full page reload to the homepage
-             window.location.href = '/';
-        } else {
-             toast({
-                variant: 'destructive',
-                title: 'Login Failed',
-                description: 'An unexpected error occurred. Please try again.',
-            });
         }
-    } catch (error) {
+    } catch (e) {
         toast({
             variant: 'destructive',
             title: 'Login Failed',
@@ -123,6 +117,9 @@ export default function LoginPage() {
                   </FormItem>
                 )}
               />
+              {error && (
+                  <p className="text-sm font-medium text-destructive">{error}</p>
+              )}
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Login

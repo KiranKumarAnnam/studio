@@ -24,6 +24,7 @@ type SignupFormValues = z.infer<typeof signupSchema>;
 export default function SignupPage() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
@@ -35,26 +36,19 @@ export default function SignupPage() {
 
   const onSubmit = async (data: SignupFormValues) => {
     setIsLoading(true);
+    setError(null);
     try {
         const result = await signup(data);
         if (result?.error) {
+            setError(result.error);
             toast({
                 variant: 'destructive',
                 title: 'Signup Failed',
                 description: result.error,
             });
-        } else if (result?.success) {
-            // Successful signup, force a full page reload to the homepage
-            window.location.href = '/';
-        } else {
-             toast({
-                variant: 'destructive',
-                title: 'Signup Failed',
-                description: 'An unexpected error occurred. Please try again.',
-            });
         }
-    } catch (error) {
-        toast({
+    } catch (e) {
+         toast({
             variant: 'destructive',
             title: 'Signup Failed',
             description: 'An unexpected server error occurred.',
@@ -109,6 +103,9 @@ export default function SignupPage() {
                         </Item>
                         )}
                     />
+                    {error && (
+                        <p className="text-sm font-medium text-destructive">{error}</p>
+                    )}
                     <Button type="submit" className="w-full" disabled={isLoading}>
                         {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Create Account
