@@ -75,45 +75,53 @@ export async function logout() {
     redirect('/login');
 }
 
-export async function login(credentials: any) {
+export async function login(credentials: any): Promise<{ success?: boolean; error?: string }> {
   await logActivity(`[login] Attempting login for email: '${credentials.email}'.`);
-  const users = await getUsers();
-  const user = users.find(u => u.email === credentials.email);
+  try {
+    const users = await getUsers();
+    const user = users.find(u => u.email === credentials.email);
 
-  if (!user || user.password !== credentials.password) {
-    await logActivity(`[login] Login failed: Invalid credentials for email '${credentials.email}'.`);
-    return { error: 'Invalid email or password.' };
+    if (!user || user.password !== credentials.password) {
+      await logActivity(`[login] Login failed: Invalid credentials for email '${credentials.email}'.`);
+      return { error: 'Invalid email or password.' };
+    }
+    
+    await createSession(user.email);
+    await logActivity(`[login] Login successful for '${user.email}'.`);
+    return { success: true };
+  } catch (error) {
+    await logActivity(`[login] An exception occurred during login: ${error}`);
+    return { error: 'A server error occurred.' };
   }
-  
-  await createSession(user.email);
-  await logActivity(`[login] Login successful for '${user.email}'. Triggering redirect.`);
-  
-  redirect('/');
 }
 
-export async function signup(credentials: any) {
+export async function signup(credentials: any): Promise<{ success?: boolean; error?: string }> {
   await logActivity(`[signup] Attempting signup for email: '${credentials.email}'.`);
-  const users = await getUsers();
-  const existingUser = users.find(u => u.email === credentials.email);
+  try {
+    const users = await getUsers();
+    const existingUser = users.find(u => u.email === credentials.email);
 
-  if (existingUser) {
-    await logActivity(`[signup] Signup failed: Email already exists for '${credentials.email}'.`);
-    return { error: 'An account with this email already exists.' };
+    if (existingUser) {
+      await logActivity(`[signup] Signup failed: Email already exists for '${credentials.email}'.`);
+      return { error: 'An account with this email already exists.' };
+    }
+
+    const newUser: User = {
+      id: (users.length + 1).toString(),
+      email: credentials.email,
+      // IMPORTANT: In a real app, NEVER store plain text passwords.
+      // Always hash and salt them using a library like bcrypt.
+      password: credentials.password,
+    };
+
+    users.push(newUser);
+    await saveUsers(users);
+    
+    await createSession(newUser.email);
+    await logActivity(`[signup] New user signed up: '${newUser.email}'.`);
+    return { success: true };
+  } catch (error) {
+    await logActivity(`[signup] An exception occurred during signup: ${error}`);
+    return { error: 'A server error occurred.' };
   }
-
-  const newUser: User = {
-    id: (users.length + 1).toString(),
-    email: credentials.email,
-    // IMPORTANT: In a real app, NEVER store plain text passwords.
-    // Always hash and salt them using a library like bcrypt.
-    password: credentials.password,
-  };
-
-  users.push(newUser);
-  await saveUsers(users);
-  
-  await createSession(newUser.email);
-  await logActivity(`[signup] New user signed up: '${newUser.email}'. Triggering redirect.`);
-
-  redirect('/');
 }

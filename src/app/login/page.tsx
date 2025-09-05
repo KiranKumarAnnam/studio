@@ -35,15 +35,33 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
-    const result = await login(data);
-    if (result?.error) {
+    try {
+        const result = await login(data);
+        if (result?.error) {
+            toast({
+                variant: 'destructive',
+                title: 'Login Failed',
+                description: result.error,
+            });
+        } else if (result?.success) {
+             // Successful login, force a full page reload to the homepage
+             window.location.href = '/';
+        } else {
+             toast({
+                variant: 'destructive',
+                title: 'Login Failed',
+                description: 'An unexpected error occurred. Please try again.',
+            });
+        }
+    } catch (error) {
         toast({
-        variant: 'destructive',
-        title: 'Login Failed',
-        description: result.error,
+            variant: 'destructive',
+            title: 'Login Failed',
+            description: 'An unexpected server error occurred.',
         });
+    } finally {
+        setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   return (

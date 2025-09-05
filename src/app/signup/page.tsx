@@ -35,15 +35,33 @@ export default function SignupPage() {
 
   const onSubmit = async (data: SignupFormValues) => {
     setIsLoading(true);
-    const result = await signup(data);
-    if (result?.error) {
-    toast({
-        variant: 'destructive',
-        title: 'Signup Failed',
-        description: result.error,
+    try {
+        const result = await signup(data);
+        if (result?.error) {
+            toast({
+                variant: 'destructive',
+                title: 'Signup Failed',
+                description: result.error,
+            });
+        } else if (result?.success) {
+            // Successful signup, force a full page reload to the homepage
+            window.location.href = '/';
+        } else {
+             toast({
+                variant: 'destructive',
+                title: 'Signup Failed',
+                description: 'An unexpected error occurred. Please try again.',
+            });
+        }
+    } catch (error) {
+        toast({
+            variant: 'destructive',
+            title: 'Signup Failed',
+            description: 'An unexpected server error occurred.',
         });
+    } finally {
+        setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   return (
